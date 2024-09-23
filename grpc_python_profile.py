@@ -120,18 +120,15 @@ def unary_stream_profiles(stream_image_names: list[list[str]]):
 
 if __name__ == "__main__":
     
-    seed = 45
+    seed = 46
 
     #unary_profiles = unary_unary_profiles()
 
     base_image_names = ["image-0.jpg", "image-1.jpg", "image-2.jpg"]
-    stream_image_names = [
-        base_image_names * 2,
-        base_image_names * 8,
-        base_image_names * 32,
-        base_image_names * 128,
-    ]
+
+    # smaller sub samples
+    stream_image_names = [ base_image_names* i for i in range(1, 100, 5)]
 
     stream_profiles = unary_stream_profiles(stream_image_names)
 
-    execute_profiles(seed, stream_profiles, 30)
+    execute_profiles(seed, stream_profiles, 20)
