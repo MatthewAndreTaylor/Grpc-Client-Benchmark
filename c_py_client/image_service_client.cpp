@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,7 +20,7 @@ class ImageServiceClient {
   ImageServiceClient(std::shared_ptr<Channel> channel)
       : stub_(ImageService::NewStub(channel)) {}
 
-  // Assembles the client's payload, sends it and presents the response back
+  // Assembles the client's payload, sends it, and presents the response back
   // from the server.
   std::vector<std::string> ListImages() {
     ListImagesRequest request;
@@ -32,7 +31,11 @@ class ImageServiceClient {
 
     // Act upon its status.
     if (status.ok()) {
-      return reply.image_names();
+      std::vector<std::string> image_names;
+      for (const auto& image_name : reply.image_names()) {
+        image_names.push_back(image_name);
+      }
+      return image_names;
     } else {
       std::cout << status.error_code() << ": " << status.error_message() << std::endl;
       return {};
@@ -43,9 +46,52 @@ class ImageServiceClient {
   std::unique_ptr<ImageService::Stub> stub_;
 };
 
+struct ImageServiceClientCapsule {
+  PyObject_HEAD;
+  ImageServiceClient* client;
+};
+
+static PyObject* ImageServiceClient_new(PyTypeObject* type, PyObject* args,
+                                        PyObject* kwds) {
+  ImageServiceClientCapsule* self;
+  self = (ImageServiceClientCapsule*)type->tp_alloc(type, 0);
+  if (self == NULL) {
+    return PyErr_NoMemory();
+  }
+  self->client = NULL;
+  return (PyObject*)self;
+}
+
+static void createImageServiceClient(PyObject* self) {
+  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
+  capsule->client = new ImageServiceClient(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+}
+
+static void destroyImageServiceClient(PyObject* self) {
+  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
+  delete capsule->client;
+  capsule->client = NULL;
+}
+
+static void ImageServiceClient_dealloc(PyObject* self) {
+  destroyImageServiceClient(self);
+  Py_TYPE(self)->tp_free(self);
+}
+
+static PyObject* ImageServiceClient_ListImages(PyObject* self) {
+  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
+  const auto image_names = capsule->client->ListImages();
+  PyObject* list = PyList_New(image_names.size());
+  for (size_t i = 0; i < image_names.size(); i++) {
+    PyList_SetItem(list, i, PyUnicode_FromString(image_names[i].c_str()));
+  }
+  return list;
+}
+
 static PyMethodDef ImageServiceClient_methods[] = {
     {"__aenter__", (PyCFunction)createImageServiceClient, METH_NOARGS, ""},
     {"__aexit__", (PyCFunction)destroyImageServiceClient, METH_NOARGS, ""},
+    {"list_images", (PyCFunction)ImageServiceClient_ListImages, METH_NOARGS, ""},
     {NULL, NULL, 0, NULL}};
 
 static PyTypeObject ImageServiceClientType = {
@@ -90,49 +136,7 @@ static PyTypeObject ImageServiceClientType = {
     PyObject_GC_Del,                         /* tp_free */
 };
 
-struct ImageServiceClientCapsule {
-  PyObject_HEAD;
-  ImageServiceClient* client;
-};
-
-static PyObject* ImageServiceClient_new(PyTypeObject* type, PyObject* args,
-                                        PyObject* kwds) {
-  ImageServiceClientCapsule* self;
-  self = (ImageServiceClientCapsule*)type->tp_alloc(type, 0);
-  if (self == NULL) {
-    return PyErr_NoMemory();
-  }
-  self->client = NULL;
-  return (PyObject*)self;
-}
-
-static void createImageServiceClient(PyObject* self) {
-  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
-  capsule->client = new ImageServiceClient(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
-}
-
-static void destroyImageServiceClient(PyObject* self) {
-  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
-  delete capsule->client;
-  capsule->client = NULL;
-}
-
-static void ImageServiceClient_dealloc(PyObject* self) {
-  destroyImageServiceClient(self);
-  Py_TYPE(self)->tp_free(self);
-}
-
-static PyObject* ImageServiceClient_ListImages(PyObject* self) {
-  ImageServiceClientCapsule* capsule = (ImageServiceClientCapsule*)self;
-  std::vector<std::string> image_names = capsule->client->ListImages();
-  PyObject* list = PyList_New(image_names.size());
-  for (size_t i = 0; i < image_names.size(); i++) {
-    PyList_SetItem(list, i, PyUnicode_FromString(image_names[i].c_str()));
-  }
-  return list;
-}
-
-static PyModuleDef QueueModuleDef = {PyModuleDef_HEAD_INIT,
+static PyModuleDef ClientModuleDef = {PyModuleDef_HEAD_INIT,
                                      "image_service_client",
                                      "Image Service Client",
                                      -1,
@@ -148,7 +152,7 @@ PyMODINIT_FUNC PyInit_image_service_client(void) {
     return NULL;
   }
 
-  m = PyModule_Create(&QueueModuleDef);
+  m = PyModule_Create(&ClientModuleDef);
   if (m == NULL) {
     return NULL;
   }
