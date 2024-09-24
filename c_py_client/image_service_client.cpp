@@ -99,7 +99,7 @@ static PyTypeObject ImageServiceClientType = {
     "ImageServiceClient", /* tp_name */
     sizeof(ImageServiceClientCapsule), /* tp_basicsize */
     0,                                  /* tp_itemsize */
-    ImageServiceClient_dealloc,         /* tp_dealloc */
+    (destructor)ImageServiceClient_dealloc, /* tp_dealloc */
     0,                                  /* tp_print */
     0,                                  /* tp_getattr */
     0,                                  /* tp_setattr */
@@ -138,7 +138,7 @@ static PyTypeObject ImageServiceClientType = {
 
 static PyModuleDef ClientModuleDef = {PyModuleDef_HEAD_INIT,
                                      "image_service_client",
-                                     "Image Service Client",
+                                     NULL,
                                      -1,
                                      NULL,
                                      NULL,

@@ -14,7 +14,14 @@ $DOCKER_RUN $DOCKER_IMAGE protoc \
 	-I. \
 	$PROTO_FILE
 
-$DOCKER_RUN $DOCKER_IMAGE pip install setuptools
+# Create a virtual environment inside Docker container
+$DOCKER_RUN $DOCKER_IMAGE python3 -m venv .venv
 
-# build wheel package for python
-$DOCKER_RUN $DOCKER_IMAGE python3 setup.py build bdist_wheel
+# Activate the virtual environment and install setuptools and wheel
+$DOCKER_RUN $DOCKER_IMAGE .venv/bin/pip install setuptools wheel
+
+# Install the current package inside the virtual environment
+$DOCKER_RUN $DOCKER_IMAGE .venv/bin/python3 setup.py install
+
+# Run the client
+$DOCKER_RUN $DOCKER_IMAGE .venv/bin/python3 client.py

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+. $(dirname $0)/config
+
+docker image rm -f $DOCKER_IMAGE

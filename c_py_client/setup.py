@@ -4,8 +4,8 @@ from setuptools.command.build_ext import build_ext
 class BuildExt(build_ext):
     def build_extensions(self):
         for ext in self.extensions:
-            ext.extra_compile_args = ['-std=c++17', '-pthread', '-I/usr/local/include']
-            ext.extra_link_args = ['-L/usr/local/lib', '-lgrpc++', '-lgrpc', '-lprotobuf', '-lpthread', '-ldl']
+            ext.extra_compile_args = ['-std=c++17', '-I/usr/local/include']
+            ext.extra_link_args = ['-L/usr/local/lib', '-lprotobuf', '-lgrpc++', '-ldl']
         build_ext.build_extensions(self)
 
 setup(
