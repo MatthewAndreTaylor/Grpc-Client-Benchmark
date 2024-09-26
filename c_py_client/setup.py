@@ -4,8 +4,8 @@ from setuptools.command.build_ext import build_ext
 class BuildExt(build_ext):
     def build_extensions(self):
         for ext in self.extensions:
-            ext.extra_compile_args = ['-std=c++17', '-I/usr/local/include']
-            ext.extra_link_args = ['-L/usr/local/lib', '-lprotobuf', '-lgrpc++', '-ldl']
+            ext.extra_compile_args = ['-std=c++17']
+            ext.extra_link_args = ["-lgrpc++", "-lgrpc", "-lgpr", "-lprotobuf"]
         build_ext.build_extensions(self)
 
 setup(
@@ -19,7 +19,9 @@ setup(
                 'image_service.grpc.pb.cc',
                 'image_service.pb.cc',
             ],
-            language='c++',
+            libraries=['protobuf', 'grpc++', 'grpc'],
+            library_dirs=['/usr/local/lib'],
+            include_dirs=['.', '/usr/local/include'],
         )
     ],
     cmdclass={'build_ext': BuildExt},
