@@ -63,11 +63,13 @@ def to_dataframe(profiles: GrpcOperationProfile):
     return frame
 
 
-def execute_profiles(seed, profiles, num_trials):
-    random.seed(seed)
+def execute_profiles(profiles, num_trials):
     run_profiles(profiles, num_trials)
     df = to_dataframe(profiles)
+    return df
 
+
+def plot_profiles(df, seed : int):
     # Plotting time as a function of argument size
     _, ax = plt.subplots()
     plt.title(f"GRPC Client Performance : {sys.platform}")
@@ -81,24 +83,32 @@ def execute_profiles(seed, profiles, num_trials):
     ax.legend()
 
     plt.savefig(f"_profiles/grpc_python_profile-{seed}.png")
+    plt.close()
 
+
+def plot_fps(df, seed : int):
     # Plotting fps
     _, ax = plt.subplots()
     plt.title(f"GRPC Client Performance : {sys.platform} - FPS")
-    ax.set_xlabel("Module")
+    ax.set_xlabel("Number of frames")
     ax.set_ylabel("FPS")
 
-    grouped = df.groupby(["module"])
-    for i, (name, group) in enumerate(grouped):
-        means = group.groupby("arg_size")["time"].mean()
-        fps = 1 / (means / 10**6)
-        ax.bar(i, fps.mean(), label=name)
+    grouped = df.groupby("module")
+    for name, group in grouped:
+        time_for_frames = group.groupby("arg_size")["time"].mean()
 
-    # hide the x-axis ticks
-    ax.set_xticks([])
+        frames = []
+        fps_values = []
+        for num_frames, time in time_for_frames.items():
+            seconds = time / 10**6
+            fps_values.append(num_frames / seconds)
+            frames.append(num_frames)     
+
+        ax.plot(frames, fps_values, label=name)
 
     ax.legend()
-    plt.savefig(f"_profiles/grpc_python_profile-fps-{seed}.png")
+    plt.savefig(f"_profiles/grpc_python_profile_fps-{seed}.png")
+    plt.close()
 
 
 
@@ -139,6 +149,7 @@ def unary_stream_profiles(stream_image_names: list[list[str]]):
 if __name__ == "__main__":
     
     seed = 46
+    random.seed(seed)
 
     #unary_profiles = unary_unary_profiles()
 
@@ -149,6 +160,8 @@ if __name__ == "__main__":
 
     stream_profiles = unary_stream_profiles(stream_image_names)
 
-    execute_profiles(seed, stream_profiles, 5)
+    df = execute_profiles(seed, stream_profiles, 20)
 
+    plot_profiles(df, seed)
+    plot_fps(df, seed)
     
