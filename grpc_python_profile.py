@@ -68,6 +68,7 @@ def execute_profiles(seed, profiles, num_trials):
     run_profiles(profiles, num_trials)
     df = to_dataframe(profiles)
 
+    # Plotting time as a function of argument size
     _, ax = plt.subplots()
     plt.title(f"GRPC Client Performance : {sys.platform}")
     ax.set_xlabel("Size of the argument")
@@ -80,6 +81,24 @@ def execute_profiles(seed, profiles, num_trials):
     ax.legend()
 
     plt.savefig(f"_profiles/grpc_python_profile-{seed}.png")
+
+    # Plotting fps
+    _, ax = plt.subplots()
+    plt.title(f"GRPC Client Performance : {sys.platform} - FPS")
+    ax.set_xlabel("Module")
+    ax.set_ylabel("FPS")
+
+    grouped = df.groupby(["module"])
+    for i, (name, group) in enumerate(grouped):
+        means = group.groupby("arg_size")["time"].mean()
+        fps = 1 / (means / 10**6)
+        ax.bar(i, fps.mean(), label=name)
+
+    # hide the x-axis ticks
+    ax.set_xticks([])
+
+    ax.legend()
+    plt.savefig(f"_profiles/grpc_python_profile-fps-{seed}.png")
 
 
 
@@ -117,7 +136,6 @@ def unary_stream_profiles(stream_image_names: list[list[str]]):
     
     return profiles
 
-
 if __name__ == "__main__":
     
     seed = 46
@@ -131,4 +149,6 @@ if __name__ == "__main__":
 
     stream_profiles = unary_stream_profiles(stream_image_names)
 
-    execute_profiles(seed, stream_profiles, 20)
+    execute_profiles(seed, stream_profiles, 5)
+
+    
