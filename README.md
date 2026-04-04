@@ -1,6 +1,6 @@
 # gRPC Python client performance benchmarking
 
-This library intends to bench mark the performance of various [gRPC](https://grpc.io/) and [Protocol Buffer](https://protobuf.dev/) libraries in Python. 
+This project intends to benchmark the performance of various [gRPC](https://grpc.io/) and [Protocol Buffer](https://protobuf.dev/) libraries in Python. 
 
 ## The Benchmark Experiment
 
@@ -29,7 +29,7 @@ The proposed `image_service` implements two key endpoints:
 
 ### Setting Up the test server
 
-Use the following commands to build and run the `image_service` test c++ server as a container:
+Use the following commands to build and run the `image_service` test C++ server as a container:
 
 ```bash
 cd test-server/cpp
@@ -53,15 +53,16 @@ The graphs are titled `GRPC Client Performance: <client-platform> : <service-imp
 
 <img src="https://github.com/MatthewAndreTaylor/protoWrap/blob/main/_profiles/grpc_python_profile_fps-81.png" />
 
+**Note: higher frames per second is better**
 
 ## Client profiler metrics
 
 The client profiler first imports each of the client wrapper packages.
-Each wrapper package implements `list_images()` and `stream_images(image_names: list[str])` which call their respected endpoint.
-The benchmark script runs multiple trials for random arrangements of profiles enforcing fairness.
+Each wrapper package implements `list_images()` and `stream_images(image_names: list[str])`which call their respective endpoints.
+The benchmark script runs multiple trials for random arrangements of profiles, enforcing fairness.
 
 
-### Running the example python clients
+### Running the example Python clients
 
 Add the `--show` argument to visualize the streamed images and have a display available.
 
